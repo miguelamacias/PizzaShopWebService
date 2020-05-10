@@ -1,4 +1,4 @@
-package com.macisdev.pizzaswebservice;
+package com.macisdev.pizzashopwebservice;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -10,21 +10,23 @@ import javax.jws.WebMethod;
 public class PizzaShopService {
 
 	private static ArrayList<String> orderList = new ArrayList<>();
+	private int waitingTime = 30;
 
 	@WebMethod(operationName = "sendOrder")
-	public boolean sendOrder(String order) throws IOException {
+	public int sendOrder(String order) throws IOException {
 
 		//Adds the order to the list of pending orders
 		orderList.add(order);
 		System.out.println("Android processing ended\n");
-		return true;
+		return waitingTime;
 	}
 
 	@WebMethod(operationName = "getOrders")
-	public ArrayList<String> getOrders() {
-		ArrayList<String> copyToSend = (ArrayList <String>)orderList.clone();
+	public ArrayList<String> getOrders(int waitingTime) {
+		ArrayList<String> copyToSend = new ArrayList<>(orderList);
 		orderList.clear();
-		System.out.println("Orders retrieved by restaurant: " + copyToSend.size());
+
+		this.waitingTime = waitingTime;
 		return copyToSend;
 	}
 }
