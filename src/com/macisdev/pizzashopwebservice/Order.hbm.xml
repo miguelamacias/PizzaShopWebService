@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/hibernate-mapping" package="com.macisdev.pizzashopwebservice">
+    <class name="com.macisdev.pizzashopwebservice.Order" table="orders">
+        <id name="orderId" column="order_id">
+            <generator class="assigned"/>
+        </id>
+
+        <property name="customerName" column="customer_name"/>
+        <property name="customerPhone" column="customer_phone"/>
+        <property name="customerAddress" column="customer_address"/>
+        <property name="orderDatetime" column="order_datetime"/>
+        <property name="deliveryMethod" column="delivery_method"/>
+        <property name="paymentMethod" column="payment_method"/>
+        <property name="totalPrice" column="total_price"/>
+
+        <list name="elements" cascade="all" table="order_elements">
+            <key column="orderId"/>
+            <index column="element_index"/>
+            <one-to-many class="com.macisdev.pizzashopwebservice.OrderElement"/>
+        </list>
+    </class>
+
+    <class name="com.macisdev.pizzashopwebservice.OrderElement" table="order_elements">
+        <id name="primaryKey" column="primary_key">
+            <generator class="native"/>
+        </id>
+        <property name="code" column="code"/>
+        <property name="name" column="name"/>
+        <property name="size" column="size"/>
+        <property name="extras" column="extras"/>
+        <property name="price" column="price"/>
+    </class>
+
+</hibernate-mapping>
