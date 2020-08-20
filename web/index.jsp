@@ -11,6 +11,6 @@
     <title>$Title$</title>
   </head>
   <body>
-  $END$
+  <p>Service is running fine</p>
   </body>
 </html>

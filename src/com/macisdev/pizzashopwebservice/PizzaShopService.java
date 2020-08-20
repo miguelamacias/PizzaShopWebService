@@ -1,7 +1,9 @@
 package com.macisdev.pizzashopwebservice;
 
 import com.macisdev.orders.Order;
+import com.sun.org.apache.xpath.internal.operations.Or;
 import org.hibernate.HibernateException;
+import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
@@ -22,6 +24,7 @@ public class PizzaShopService {
 
 		//Adds the order to the list of pending orders
 		orderList.add(order);
+		storeOrder(order);
 		System.out.println("Android processing ended\n");
 		return waitingTime;
 	}
@@ -59,7 +62,7 @@ public class PizzaShopService {
 		Session session = null;
 		try {
 			session = HibernateSingleton.getSession();
-			Order order = (Order) session.load(Order.class, orderId);
+			Order order = session.get(Order.class, orderId);
 			return order;
 		} catch (HibernateException e) {
 			e.printStackTrace();
