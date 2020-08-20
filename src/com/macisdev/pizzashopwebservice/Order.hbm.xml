@@ -1,34 +1,34 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <hibernate-mapping xmlns="http://www.hibernate.org/xsd/hibernate-mapping" package="com.macisdev.pizzashopwebservice">
-    <class name="com.macisdev.pizzashopwebservice.Order" table="orders">
-        <id name="orderId" column="order_id">
+    <class name="com.macisdev.orders.Order" table="orders">
+        <id name="orderId" column="order_id" type="java.lang.String">
             <generator class="assigned"/>
         </id>
 
-        <property name="customerName" column="customer_name"/>
-        <property name="customerPhone" column="customer_phone"/>
-        <property name="customerAddress" column="customer_address"/>
-        <property name="orderDatetime" column="order_datetime"/>
-        <property name="deliveryMethod" column="delivery_method"/>
-        <property name="paymentMethod" column="payment_method"/>
-        <property name="totalPrice" column="total_price"/>
+        <property name="customerName" column="customer_name" type="java.lang.String"/>
+        <property name="customerPhone" column="customer_phone" type="java.lang.String"/>
+        <property name="customerAddress" column="customer_address" type="java.lang.String"/>
+        <property name="orderDateTime" column="order_datetime" type="java.lang.String"/>
+        <property name="deliveryMethod" column="delivery_method" type="java.lang.String"/>
+        <property name="paymentMethod" column="payment_method" type="java.lang.String"/>
+        <property name="totalPrice" column="total_price" type="double"/>
 
-        <list name="elements" cascade="all" table="order_elements">
+        <list name="orderElements" cascade="all" table="order_elements">
             <key column="orderId"/>
             <index column="element_index"/>
-            <one-to-many class="com.macisdev.pizzashopwebservice.OrderElement"/>
+            <one-to-many class="com.macisdev.orders.OrderElement"/>
         </list>
     </class>
 
-    <class name="com.macisdev.pizzashopwebservice.OrderElement" table="order_elements">
+    <class name="com.macisdev.orders.OrderElement" table="order_elements">
         <id name="primaryKey" column="primary_key">
             <generator class="native"/>
         </id>
-        <property name="code" column="code"/>
-        <property name="name" column="name"/>
-        <property name="size" column="size"/>
-        <property name="extras" column="extras"/>
-        <property name="price" column="price"/>
+        <property name="code" column="code" type="java.lang.String"/>
+        <property name="name" column="name" type="java.lang.String"/>
+        <property name="size" column="size" type="java.lang.String"/>
+        <property name="extras" column="extras" type="java.lang.String"/>
+        <property name="price" column="price" type="double"/>
     </class>
 
 </hibernate-mapping>

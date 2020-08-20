@@ -1,5 +1,10 @@
 package com.macisdev.pizzashopwebservice;
 
+import com.macisdev.orders.Order;
+import org.hibernate.HibernateException;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import javax.jws.WebService;
@@ -28,5 +33,37 @@ public class PizzaShopService {
 
 		this.waitingTime = waitingTime;
 		return copyToSend;
+	}
+
+	private boolean storeOrder (String orderString) {
+		Session session = null;
+		try {
+			Order order = ParserXML.parseXmlToOrder(orderString);
+			session = HibernateSingleton.getSession();
+			Transaction transaction = session.beginTransaction();
+			session.save(order);
+			transaction.commit();
+			session.close();
+			return true;
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		} finally {
+			session.close();
+		}
+	}
+
+	@WebMethod(operationName = "getStoredOrder")
+	public Order getStoredOrder(String orderId) {
+		Session session = null;
+		try {
+			session = HibernateSingleton.getSession();
+			Order order = (Order) session.load(Order.class, orderId);
+			return order;
+		} catch (HibernateException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 }
