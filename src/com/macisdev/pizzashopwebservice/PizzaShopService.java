@@ -2,13 +2,12 @@ package com.macisdev.pizzashopwebservice;
 
 import com.macisdev.orders.Order;
 import com.sun.org.apache.xpath.internal.operations.Or;
-import org.hibernate.HibernateException;
-import org.hibernate.ObjectNotFoundException;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
+import org.hibernate.*;
+import org.hibernate.query.Query;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import javax.jws.WebService;
 import javax.jws.WebMethod;
 
@@ -68,5 +67,37 @@ public class PizzaShopService {
 			e.printStackTrace();
 			return null;
 		}
+	}
+
+	@WebMethod(operationName = "getStoredOrdersByPhoneNumber")
+	public List<Order> getStoredOrdersByPhoneNumber(String phoneNumber) {
+		Session session = null;
+		List<Order> ordersRetrieved = null;
+		try {
+			session = HibernateSingleton.getSession();
+			Query query = session.createQuery("from Order where customerPhone = :phoneNumber");
+			query.setParameter("phoneNumber", phoneNumber);
+			ordersRetrieved = query.getResultList();
+		} catch (HibernateException e) {
+			e.printStackTrace();
+		}
+
+		return ordersRetrieved;
+	}
+
+	@WebMethod(operationName = "getAllStoredOrders")
+	public List<Order> getAllStoredOrders() {
+		Session session = null;
+		List<Order> ordersRetrieved = null;
+		try {
+			session = HibernateSingleton.getSession();
+			Query query = session.createQuery("from Order");
+			ordersRetrieved = query.getResultList();
+		} catch (HibernateException e) {
+			e.printStackTrace();
+		}
+
+		return ordersRetrieved;
+
 	}
 }
