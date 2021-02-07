@@ -7,6 +7,7 @@ import org.hibernate.cfg.Configuration;
 
 public class HibernateSingleton {
 	private static final SessionFactory ourSessionFactory;
+	private static Session session = null;
 
 	static {
 		try {
@@ -14,12 +15,13 @@ public class HibernateSingleton {
 			configuration.configure("com/macisdev/pizzashopwebservice/hibernate.cfg.xml");
 
 			ourSessionFactory = configuration.buildSessionFactory();
+			session = ourSessionFactory.openSession();
 		} catch (Throwable ex) {
 			throw new ExceptionInInitializerError(ex);
 		}
 	}
 
 	public static Session getSession() throws HibernateException {
-		return ourSessionFactory.openSession();
+		return session;
 	}
 }
