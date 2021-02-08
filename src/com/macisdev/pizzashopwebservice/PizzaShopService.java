@@ -110,8 +110,6 @@ public class PizzaShopService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
-		} finally {
-			session.close();
 		}
 	}
 

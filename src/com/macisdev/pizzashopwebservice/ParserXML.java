@@ -34,7 +34,9 @@ public class ParserXML {
 
 		Element elementOrderInfo = (Element) nodeOrderInfo;
 
-		order.setOrderDateTime(parseDateTime(System.currentTimeMillis())); //TODO: Should be sent by the android app
+		order.setOrderDateTime(
+				parseDateTime(Long.parseLong(
+						elementOrderInfo.getElementsByTagName("order_datetime").item(0).getTextContent())));
 		order.setCustomerName(elementOrderInfo.getElementsByTagName("customer_name").item(0).getTextContent());
 		order.setCustomerPhone(elementOrderInfo.getElementsByTagName("customer_phone").item(0).getTextContent());
 		order.setDeliveryMethod(elementOrderInfo.getElementsByTagName("delivery_method").item(0).getTextContent());
