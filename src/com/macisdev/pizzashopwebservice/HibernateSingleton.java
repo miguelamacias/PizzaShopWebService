@@ -7,7 +7,7 @@ import org.hibernate.cfg.Configuration;
 
 public class HibernateSingleton {
 	private static final SessionFactory ourSessionFactory;
-	private static Session session = null;
+	private static final Session session;
 
 	static {
 		try {

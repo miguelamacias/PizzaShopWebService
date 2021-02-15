@@ -9,7 +9,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 
-import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -24,11 +23,11 @@ import javax.xml.transform.stream.StreamResult;
 @WebService(serviceName = "PizzaShopWebService")
 public class PizzaShopService {
 
-	private static ArrayList<String> orderList = new ArrayList<>();
+	private static final ArrayList<String> orderList = new ArrayList<>();
 	private int waitingTime = 30;
 
 	@WebMethod(operationName = "sendOrder")
-	public int sendOrder(String order) throws IOException {
+	public String sendOrder(String order) {
 		//Generates an ID for the order and attaches it to the received order
 		String generatedId = generateOrderId(order);
 		String orderWithId = attachIdToOrder(order, generatedId);
@@ -37,7 +36,7 @@ public class PizzaShopService {
 		orderList.add(orderWithId);
 		storeOrder(order, generatedId);
 		System.out.println("Android processing ended\n");
-		return waitingTime;
+		return waitingTime + "_" + generatedId;
 	}
 
 	@WebMethod(operationName = "getOrders")
@@ -52,13 +51,13 @@ public class PizzaShopService {
 	private String generateOrderId(String orderXml) {
 		StringBuilder id = new StringBuilder();
 		try {
-			Order order = ParserXML.parseXmlToOrder(orderXml);
-			id.append(order.getCustomerPhone().substring(0, 3));
-
-			SessionFactory sessionFactory;
 			Session session = HibernateSingleton.getSession();
-			Query query = session.createQuery("SELECT count(*) from Order");
-			id.append((long) query.getSingleResult());
+			Query<Long> query = session.createQuery("SELECT count(*) from Order", Long.class);
+			id.append(String.format("%05d", query.getSingleResult()));
+			id.append("-");
+
+			Order order = ParserXML.parseXmlToOrder(orderXml);
+			id.append(order.getCustomerPhone(), 0, 3);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -96,8 +95,8 @@ public class PizzaShopService {
 
 	}
 
-	private boolean storeOrder (String orderString, String orderId) {
-		Session session = null;
+	private void storeOrder (String orderString, String orderId) {
+		Session session;
 		try {
 			Order order = ParserXML.parseXmlToOrder(orderString);
 			order.setOrderId(orderId);
@@ -105,21 +104,18 @@ public class PizzaShopService {
 			Transaction transaction = session.beginTransaction();
 			session.save(order);
 			transaction.commit();
-			return true;
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			return false;
 		}
 	}
 
 	@WebMethod(operationName = "getStoredOrder")
 	public Order getStoredOrder(String orderId) {
-		Session session = null;
+		Session session;
 		try {
 			session = HibernateSingleton.getSession();
-			Order order = session.get(Order.class, orderId);
-			return order;
+			return session.get(Order.class, orderId);
 		} catch (HibernateException e) {
 			e.printStackTrace();
 			return null;
@@ -128,11 +124,12 @@ public class PizzaShopService {
 
 	@WebMethod(operationName = "getStoredOrdersByPhoneNumber")
 	public List<Order> getStoredOrdersByPhoneNumber(String phoneNumber) {
-		Session session = null;
+		Session session;
 		List<Order> ordersRetrieved = null;
 		try {
 			session = HibernateSingleton.getSession();
-			Query query = session.createQuery("from Order where customerPhone = :phoneNumber");
+			Query<Order> query = session.createQuery("from Order where customerPhone = :phoneNumber",
+					Order.class);
 			query.setParameter("phoneNumber", phoneNumber);
 			ordersRetrieved = query.getResultList();
 		} catch (HibernateException e) {
@@ -144,11 +141,11 @@ public class PizzaShopService {
 
 	@WebMethod(operationName = "getAllStoredOrders")
 	public List<Order> getAllStoredOrders() {
-		Session session = null;
+		Session session;
 		List<Order> ordersRetrieved = null;
 		try {
 			session = HibernateSingleton.getSession();
-			Query query = session.createQuery("from Order");
+			Query<Order> query = session.createQuery("from Order", Order.class);
 			ordersRetrieved = query.getResultList();
 		} catch (HibernateException e) {
 			e.printStackTrace();
