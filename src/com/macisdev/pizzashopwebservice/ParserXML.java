@@ -100,6 +100,10 @@ public class ParserXML {
 		root.appendChild(orderInfo);
 
 		//Create the elements for the actual information about the order
+		Element orderId = document.createElement("order_id");
+		orderId.appendChild(document.createTextNode(order.getOrderDateTime()));
+		orderInfo.appendChild(orderId);
+
 		Element orderDateTime = document.createElement("order_datetime");
 		orderDateTime.appendChild(document.createTextNode(order.getOrderDateTime()));
 		orderInfo.appendChild(orderDateTime);

@@ -2,23 +2,20 @@ package com.macisdev.pizzashopwebservice;
 
 import com.macisdev.orders.Order;
 import com.sun.org.apache.xerces.internal.parsers.DOMParser;
-import org.hibernate.*;
+import org.hibernate.HibernateException;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 
+import javax.jws.WebMethod;
+import javax.jws.WebService;
 import java.io.StringReader;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
-import javax.jws.WebService;
-import javax.jws.WebMethod;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 
 @WebService(serviceName = "PizzaShopWebService")
 public class PizzaShopService {
@@ -103,11 +100,14 @@ public class PizzaShopService {
 	}
 
 	@WebMethod(operationName = "getStoredOrder")
-	public Order getStoredOrder(String orderId) {
+	public String getStoredOrder(String orderId) {
 		Session session;
 		try {
 			session = HibernateSingleton.getSession();
-			return session.get(Order.class, orderId);
+			Order order = session.get(Order.class, orderId);
+			System.out.println(order.toString());
+
+			return ParserXML.parseOrderToXml(order);
 		} catch (HibernateException e) {
 			e.printStackTrace();
 			return null;
