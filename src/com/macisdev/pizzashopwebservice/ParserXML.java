@@ -14,10 +14,19 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class ParserXML {
@@ -70,6 +79,114 @@ public class ParserXML {
 			}			
 		}		
 		return order;
+	}
+
+	public static String parseOrderToXml(Order order) {
+		//Creates the document
+		Document document = null;
+
+		try {
+			document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		} catch (ParserConfigurationException e) {
+			e.printStackTrace();
+		}
+
+		//Creates the root element
+		Element root = document.createElement("order");
+		document.appendChild(root);
+
+		//Creates the order_info node
+		Element orderInfo = document.createElement("order_info");
+		root.appendChild(orderInfo);
+
+		//Create the elements for the actual information about the order
+		Element orderDateTime = document.createElement("order_datetime");
+		orderDateTime.appendChild(document.createTextNode(order.getOrderDateTime()));
+		orderInfo.appendChild(orderDateTime);
+
+		Element name = document.createElement("customer_name");
+		name.appendChild(document.createTextNode(order.getCustomerName()));
+		orderInfo.appendChild(name);
+
+		Element phone = document.createElement("customer_phone");
+		phone.appendChild(document.createTextNode(order.getCustomerPhone()));
+		orderInfo.appendChild(phone);
+
+		Element delivery = document.createElement("delivery_method");
+		delivery.appendChild(document.createTextNode(order.getDeliveryMethod()));
+		orderInfo.appendChild(delivery);
+
+		Element address = document.createElement("customer_address");
+		address.appendChild(document.createTextNode(order.getCustomerAddress()));
+		orderInfo.appendChild(address);
+
+		Element payment = document.createElement("payment_method");
+		payment.appendChild(document.createTextNode(order.getPaymentMethod()));
+		orderInfo.appendChild(payment);
+
+		//Adds the total price to the xml file
+		double totalPrice = 0;
+		for (OrderElement element : order.getOrderElements()) {
+			totalPrice += element.getPrice();
+		}
+
+		Element price = document.createElement("total_price");
+		price.appendChild(document.createTextNode(String.format("%.2f", totalPrice)));
+		orderInfo.appendChild(price);
+
+		//Add the ordered stuffs to the xml (suppose everything is a pizza for simplicity)
+		for (OrderElement currentElement : order.getOrderElements()) {
+			Element pizza = document.createElement("pizza");
+			root.appendChild(pizza);
+
+			Element pizzaCode = document.createElement("code");
+			pizzaCode.appendChild(document.createTextNode(String.valueOf(currentElement.getCode())));
+			pizza.appendChild(pizzaCode);
+
+			Element pizzaName = document.createElement("name");
+			pizzaName.appendChild(document.createTextNode(currentElement.getName()));
+			pizza.appendChild(pizzaName);
+
+			Element pizzaSize = document.createElement("size");
+			pizzaSize.appendChild(document.createTextNode(currentElement.getSize()));
+			pizza.appendChild(pizzaSize);
+
+			Element pizzaExtras = document.createElement("extras");
+			pizzaExtras.appendChild(document.createTextNode(currentElement.getExtras()));
+			pizza.appendChild(pizzaExtras);
+
+			Element pizzaPrice = document.createElement("price");
+			pizzaPrice.appendChild(document.createTextNode(String.valueOf(currentElement.getPrice())));
+			pizza.appendChild(pizzaPrice);
+		}
+
+		return transformDOMDocumentToString(document);
+
+	}
+
+	public static String transformDOMDocumentToString(Document document) {
+		try {
+			DOMSource domSource = new DOMSource(document);
+			StringWriter writer = new StringWriter();
+			StreamResult result = new StreamResult(writer);
+			TransformerFactory tf = TransformerFactory.newInstance();
+			Transformer transformer = tf.newTransformer();
+			transformer.transform(domSource, result);
+			return writer.toString();
+		} catch (TransformerException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public static List<String> convertOrderListToStringList(List<Order> orderList) {
+		List<String> stringList = new ArrayList<>();
+
+		for (Order order : orderList) {
+			stringList.add(parseOrderToXml(order));
+		}
+
+		return stringList;
 	}
 
 	public static String parseDateTime(long milliSeconds) {

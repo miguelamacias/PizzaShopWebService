@@ -66,7 +66,6 @@ public class PizzaShopService {
 	}
 
 	private String attachIdToOrder(String order, String id) {
-		String modifiedOrder = "";
 		try {
 			//Creates a xml document using the xml string
 			DOMParser parser = new DOMParser();
@@ -79,19 +78,12 @@ public class PizzaShopService {
 			orderId.appendChild(document.createTextNode(id));
 			orderInfo.appendChild(orderId);
 
-			//Returns the modified document as a string
-			DOMSource domSource = new DOMSource(document);
-			StringWriter writer = new StringWriter();
-			StreamResult result = new StreamResult(writer);
-			TransformerFactory tf = TransformerFactory.newInstance();
-			Transformer transformer = tf.newTransformer();
-			transformer.transform(domSource, result);
+			return ParserXML.transformDOMDocumentToString(document);
 
-			modifiedOrder = writer.toString();
 		} catch (Exception e) {
 			e.printStackTrace();
+			return null;
 		}
-		return modifiedOrder;
 
 	}
 
