@@ -30,22 +30,36 @@ import java.util.List;
 
 
 public class ParserXML {
-	public static Order parseXmlToOrder(String xml) throws Exception {
+	public static final int WEBSERVICE = 1;
+	public static final int RESTAURANT = 2;
+	public static Order parseXmlToOrder(String xml, int client) {
 		Order order = new Order();
-		Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new InputSource(new StringReader(xml)));
-		document.getDocumentElement().normalize();
+		Document document;
+		try {
+			document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(
+					new InputSource(new StringReader(xml)));
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 
 
 		//Get order header
 		NodeList orderInfo = document.getElementsByTagName("order_info");
-		
+
 		Node nodeOrderInfo = orderInfo.item(0);
 
 		Element elementOrderInfo = (Element) nodeOrderInfo;
 
-		order.setOrderDateTime(
-				parseDateTime(Long.parseLong(
-						elementOrderInfo.getElementsByTagName("order_datetime").item(0).getTextContent())));
+		if (client == RESTAURANT) {
+			order.setOrderId(elementOrderInfo.getElementsByTagName("order_id").item(0).getTextContent());
+			order.setOrderDateTime(elementOrderInfo.getElementsByTagName("order_datetime").item(0).getTextContent());
+		}
+
+		if (client == WEBSERVICE) {
+			order.setOrderDateTime(parseDateTime(Long.parseLong(
+							elementOrderInfo.getElementsByTagName("order_datetime").item(0).getTextContent())));
+		}
 		order.setCustomerName(elementOrderInfo.getElementsByTagName("customer_name").item(0).getTextContent());
 		order.setCustomerPhone(elementOrderInfo.getElementsByTagName("customer_phone").item(0).getTextContent());
 		order.setDeliveryMethod(elementOrderInfo.getElementsByTagName("delivery_method").item(0).getTextContent());
@@ -54,17 +68,17 @@ public class ParserXML {
 		double totalPrice = Double.parseDouble(elementOrderInfo.getElementsByTagName("total_price").
 				item(0).getTextContent());
 		order.setTotalPrice(totalPrice);
-		
+
 		//Parse order elements		
 		NodeList orderElementsList = document.getElementsByTagName("pizza");
-		
+
 		for (int i = 0; i < orderElementsList.getLength(); i++) {
 			Node currentNode = orderElementsList.item(i);
-			
-			if(currentNode.getNodeType() == Node.ELEMENT_NODE) {
+
+			if (currentNode.getNodeType() == Node.ELEMENT_NODE) {
 				//Creates the orderElement object to add its details after being parsed from the xml
 				OrderElement orderElement = new OrderElement();
-				
+
 				Element currentElement = (Element) currentNode;
 				orderElement.setCode(currentElement.getElementsByTagName("code").item(0).getTextContent());
 				orderElement.setName(currentElement.getElementsByTagName("name").item(0).getTextContent());
@@ -73,22 +87,23 @@ public class ParserXML {
 				double price = Double.parseDouble(currentElement.getElementsByTagName("price").
 						item(0).getTextContent());
 				orderElement.setPrice(price);
-				
+
 				//Adds the element parsed to the order
 				order.addElementToOrder(orderElement);
-			}			
-		}		
+			}
+		}
 		return order;
 	}
 
-	public static String parseOrderToXml(Order order) {
+	public static String parseOrderToXml(Order order, int client) {
 		//Creates the document
-		Document document = null;
+		Document document;
 
 		try {
 			document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 		} catch (ParserConfigurationException e) {
 			e.printStackTrace();
+			return null;
 		}
 
 		//Creates the root element
@@ -100,9 +115,12 @@ public class ParserXML {
 		root.appendChild(orderInfo);
 
 		//Create the elements for the actual information about the order
-		Element orderId = document.createElement("order_id");
-		orderId.appendChild(document.createTextNode(order.getOrderDateTime()));
-		orderInfo.appendChild(orderId);
+
+		if (client == WEBSERVICE) {
+			Element orderId = document.createElement("order_id");
+			orderId.appendChild(document.createTextNode(order.getOrderDateTime()));
+			orderInfo.appendChild(orderId);
+		}
 
 		Element orderDateTime = document.createElement("order_datetime");
 		orderDateTime.appendChild(document.createTextNode(order.getOrderDateTime()));
@@ -183,11 +201,21 @@ public class ParserXML {
 		}
 	}
 
-	public static List<String> convertOrderListToStringList(List<Order> orderList) {
+	public static List<Order> convertStringToOrderList(List<String> stringList, int client) {
+		List<Order> orderList = new ArrayList<>();
+
+		for (String order : stringList) {
+			orderList.add(ParserXML.parseXmlToOrder(order, client));
+		}
+
+		return orderList;
+	}
+
+	public static List<String> convertOrderListToStringList(List<Order> orderList, int client) {
 		List<String> stringList = new ArrayList<>();
 
 		for (Order order : orderList) {
-			stringList.add(parseOrderToXml(order));
+			stringList.add(parseOrderToXml(order, client));
 		}
 
 		return stringList;

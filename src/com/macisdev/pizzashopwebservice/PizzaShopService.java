@@ -53,7 +53,7 @@ public class PizzaShopService {
 			id.append(String.format("%05d", query.getSingleResult()));
 			id.append("-");
 
-			Order order = ParserXML.parseXmlToOrder(orderXml);
+			Order order = ParserXML.parseXmlToOrder(orderXml, ParserXML.WEBSERVICE);
 			id.append(order.getCustomerPhone(), 0, 3);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -87,7 +87,7 @@ public class PizzaShopService {
 	private void storeOrder (String orderString, String orderId) {
 		Session session;
 		try {
-			Order order = ParserXML.parseXmlToOrder(orderString);
+			Order order = ParserXML.parseXmlToOrder(orderString, ParserXML.WEBSERVICE);
 			order.setOrderId(orderId);
 			session = HibernateSingleton.getSession();
 			Transaction transaction = session.beginTransaction();
@@ -107,7 +107,7 @@ public class PizzaShopService {
 			Order order = session.get(Order.class, orderId);
 			System.out.println(order.toString());
 
-			return ParserXML.parseOrderToXml(order);
+			return ParserXML.parseOrderToXml(order, ParserXML.WEBSERVICE);
 		} catch (HibernateException e) {
 			e.printStackTrace();
 			return null;
@@ -115,15 +115,15 @@ public class PizzaShopService {
 	}
 
 	@WebMethod(operationName = "getStoredOrdersByPhoneNumber")
-	public List<Order> getStoredOrdersByPhoneNumber(String phoneNumber) {
+	public List<String> getStoredOrdersByPhoneNumber(String phoneNumber) {
 		Session session;
-		List<Order> ordersRetrieved = null;
+		List<String> ordersRetrieved = null;
 		try {
 			session = HibernateSingleton.getSession();
 			Query<Order> query = session.createQuery("from Order where customerPhone = :phoneNumber",
 					Order.class);
 			query.setParameter("phoneNumber", phoneNumber);
-			ordersRetrieved = query.getResultList();
+			ordersRetrieved = ParserXML.convertOrderListToStringList(query.getResultList(), ParserXML.WEBSERVICE);
 		} catch (HibernateException e) {
 			e.printStackTrace();
 		}
@@ -132,13 +132,13 @@ public class PizzaShopService {
 	}
 
 	@WebMethod(operationName = "getAllStoredOrders")
-	public List<Order> getAllStoredOrders() {
+	public List<String> getAllStoredOrders() {
 		Session session;
-		List<Order> ordersRetrieved = null;
+		List<String> ordersRetrieved = null;
 		try {
 			session = HibernateSingleton.getSession();
 			Query<Order> query = session.createQuery("from Order", Order.class);
-			ordersRetrieved = query.getResultList();
+			ordersRetrieved = ParserXML.convertOrderListToStringList(query.getResultList(), ParserXML.WEBSERVICE);
 		} catch (HibernateException e) {
 			e.printStackTrace();
 		}
