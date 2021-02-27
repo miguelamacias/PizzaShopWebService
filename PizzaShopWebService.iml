@@ -9,6 +9,7 @@
         <webroots>
           <root url="file://$MODULE_DIR$/web" relative="/" />
         </webroots>
+        <sourceRoots />
       </configuration>
       <facet type="webservices" name="WebServices">
         <configuration ws.engine="Glassfish / JAX-WS 2.2 RI / Metro 1.X / JWSDP 2.2" />
@@ -35,6 +36,5 @@
     <orderEntry type="library" exported="" scope="PROVIDED" name="GlassFish 5.0.0" level="application_server_libraries" />
     <orderEntry type="library" exported="" name="Hibernate 5.4.11-5.4.11" level="project" />
     <orderEntry type="library" exported="" name="mariadb-java-client-2.6.2" level="project" />
-    <orderEntry type="library" exported="" name="ordersLibrary" level="project" />
   </component>
 </module>

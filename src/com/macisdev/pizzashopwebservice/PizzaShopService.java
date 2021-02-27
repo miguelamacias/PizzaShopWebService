@@ -1,6 +1,6 @@
 package com.macisdev.pizzashopwebservice;
 
-import com.macisdev.orders.Order;
+import com.macisdev.pizzashopwebservice.model.Order;
 import com.sun.org.apache.xerces.internal.parsers.DOMParser;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;

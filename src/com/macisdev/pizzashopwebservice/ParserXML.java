@@ -5,8 +5,8 @@
  */
 package com.macisdev.pizzashopwebservice;
 
-import com.macisdev.orders.Order;
-import com.macisdev.orders.OrderElement;
+import com.macisdev.pizzashopwebservice.model.Order;
+import com.macisdev.pizzashopwebservice.model.OrderElement;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;

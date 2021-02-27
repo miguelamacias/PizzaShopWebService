@@ -9,7 +9,6 @@
         </element>
         <element id="directory" name="lib">
           <element id="library" level="project" name="mariadb-java-client-2.6.2" />
-          <element id="library" level="project" name="ordersLibrary" />
           <element id="library" level="project" name="Hibernate 5.4.11-5.4.11" />
           <element id="library" level="project" name="JAX-WS-Glassfish / JAX-WS 2.2 RI / Metro 1.X / JWSDP 2.2" />
         </element>
