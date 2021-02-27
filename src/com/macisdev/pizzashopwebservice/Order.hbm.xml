@@ -12,6 +12,7 @@
         <property name="deliveryMethod" column="delivery_method" type="java.lang.String"/>
         <property name="paymentMethod" column="payment_method" type="java.lang.String"/>
         <property name="totalPrice" column="total_price" type="double"/>
+        <property name="orderStatus" column="order_status" type="int"/>
 
         <list name="orderElements" cascade="all" table="order_elements">
             <key column="orderId"/>

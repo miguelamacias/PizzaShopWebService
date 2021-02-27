@@ -1,49 +1,95 @@
 package com.macisdev.pizzashopwebservice;
 
-import com.macisdev.pizzashopwebservice.model.Order;
-import com.sun.org.apache.xerces.internal.parsers.DOMParser;
+import com.macisdev.orders.Order;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.query.Query;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.xml.sax.InputSource;
 
 import javax.jws.WebMethod;
 import javax.jws.WebService;
-import java.io.StringReader;
-import java.util.ArrayList;
+import java.security.SecureRandom;
+import java.util.Date;
 import java.util.List;
 
 @WebService(serviceName = "PizzaShopWebService")
 public class PizzaShopService {
 
-	private static final ArrayList<String> orderList = new ArrayList<>();
 	private int waitingTime = 30;
 
 	@WebMethod(operationName = "sendOrder")
 	public String sendOrder(String order) {
 		//Generates an ID for the order and attaches it to the received order
 		String generatedId = generateOrderId(order);
-		String orderWithId = attachIdToOrder(order, generatedId);
 
 		//Adds the order to the list of pending orders
-		orderList.add(orderWithId);
 		storeOrder(order, generatedId);
-		System.out.println("Android processing ended\n");
+		System.out.println("Android processing ended ->" + new Date() + "\n");
 		return waitingTime + "_" + generatedId;
 	}
 
 	@WebMethod(operationName = "getOrders")
-	public ArrayList<String> getOrders(int waitingTime) {
-		ArrayList<String> copyToSend = new ArrayList<>(orderList);
-		orderList.clear();
-
+	public List<String> getNewOrders(int waitingTime) {
 		this.waitingTime = waitingTime;
-		return copyToSend;
+		Session session;
+		List<Order> ordersRetrieved = null;
+		try {
+			session = HibernateSingleton.getSession();
+			Query<Order> query = session.createQuery("from Order where orderStatus = :status",
+					Order.class);
+			query.setParameter("status", Order.STATUS_RECEIVED_BY_SERVER);
+			ordersRetrieved = query.getResultList();
+
+			//Change the status order once they are retrieved by the desktop app
+			Transaction transaction = session.beginTransaction();
+			for (Order order : ordersRetrieved) {
+				order.setOrderStatus(Order.STATUS_SENDED_TO_MANAGER);
+				session.update(order);
+			}
+			transaction.commit();
+		} catch (HibernateException e) {
+			e.printStackTrace();
+			return null;
+		}
+
+		return ParserXML.convertOrderListToStringList(ordersRetrieved, ParserXML.WEBSERVICE);
 	}
+
+	@WebMethod(operationName = "getUnfinishedOrders")
+	public List<String> getUnfinishedOrders() {
+		Session session;
+		List<String> ordersRetrieved = null;
+		try {
+			session = HibernateSingleton.getSession();
+			Query<Order> query = session.createQuery("from Order where orderStatus = :orderStatus",
+					Order.class);
+			query.setParameter("orderStatus", Order.STATUS_SENDED_TO_MANAGER);
+			ordersRetrieved = ParserXML.convertOrderListToStringList(query.getResultList(), ParserXML.WEBSERVICE);
+		} catch (HibernateException e) {
+			e.printStackTrace();
+		}
+
+		return ordersRetrieved;
+	}
+
+	@WebMethod(operationName = "finalizeOrder")
+	public void finalizeOrder(String orderId) {
+		Session session;
+		Transaction transaction = null;
+		try {
+			session = HibernateSingleton.getSession();
+			transaction = session.beginTransaction();
+			Order order = session.get(Order.class, orderId);
+			order.setOrderStatus(Order.STATUS_FINISHED);
+			session.update(order);
+			transaction.commit();
+
+		} catch (HibernateException e) {
+			transaction.rollback();
+			e.printStackTrace();
+		}
+	}
+
 
 	private String generateOrderId(String orderXml) {
 		StringBuilder id = new StringBuilder();
@@ -52,9 +98,8 @@ public class PizzaShopService {
 			Query<Long> query = session.createQuery("SELECT count(*) from Order", Long.class);
 			id.append(String.format("%05d", query.getSingleResult()));
 			id.append("-");
-
-			Order order = ParserXML.parseXmlToOrder(orderXml, ParserXML.WEBSERVICE);
-			id.append(order.getCustomerPhone(), 0, 3);
+			SecureRandom random = new SecureRandom();
+			id.append(random.nextInt(899) + 100);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -62,39 +107,21 @@ public class PizzaShopService {
 		return id.toString();
 	}
 
-	private String attachIdToOrder(String order, String id) {
-		try {
-			//Creates a xml document using the xml string
-			DOMParser parser = new DOMParser();
-			parser.parse(new InputSource(new StringReader(order)));
-			Document document = parser.getDocument();
-
-			//Adds a generated id to the xml
-			Node orderInfo = document.getElementsByTagName("order_info").item(0);
-			Element orderId = document.createElement("order_id");
-			orderId.appendChild(document.createTextNode(id));
-			orderInfo.appendChild(orderId);
-
-			return ParserXML.transformDOMDocumentToString(document);
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
-		}
-
-	}
-
 	private void storeOrder (String orderString, String orderId) {
 		Session session;
+		Transaction transaction = null;
 		try {
 			Order order = ParserXML.parseXmlToOrder(orderString, ParserXML.WEBSERVICE);
 			order.setOrderId(orderId);
+			order.setOrderStatus(Order.STATUS_RECEIVED_BY_SERVER);
 			session = HibernateSingleton.getSession();
-			Transaction transaction = session.beginTransaction();
+			transaction = session.beginTransaction();
 			session.save(order);
 			transaction.commit();
 
 		} catch (Exception e) {
+			assert transaction != null;
+			transaction.rollback();
 			e.printStackTrace();
 		}
 	}

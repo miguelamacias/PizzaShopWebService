@@ -1,7 +1,7 @@
 package com.macisdev.pizzashopwebservice;
 
 
-import com.macisdev.pizzashopwebservice.model.Order;
+import com.macisdev.orders.Order;
 
 import java.util.ArrayList;
 import java.util.List;
