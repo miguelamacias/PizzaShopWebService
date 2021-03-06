@@ -16,7 +16,7 @@ public class HibernateSingleton {
 
 			ourSessionFactory = configuration.buildSessionFactory();
 			session = ourSessionFactory.openSession();
-		} catch (Throwable ex) {
+		} catch (Exception ex) {
 			throw new ExceptionInInitializerError(ex);
 		}
 	}
@@ -24,4 +24,8 @@ public class HibernateSingleton {
 	public static Session getSession() throws HibernateException {
 		return session;
 	}
+
+	//Private constructor to avoid instantiation
+	private HibernateSingleton(){}
+
 }

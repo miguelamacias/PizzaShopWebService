@@ -234,4 +234,7 @@ public class ParserXML {
 				dateTime.getDayOfMonth(), dateTime.getMonth().getValue(), dateTime.getYear(),
 				dateTime.getHour(), dateTime.getMinute(), dateTime.getSecond());
 	}
+
+	//private constructor to avoid instantiation
+	private ParserXML() {}
 }

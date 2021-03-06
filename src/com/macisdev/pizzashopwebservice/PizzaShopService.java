@@ -9,22 +9,28 @@ import org.hibernate.query.Query;
 import javax.jws.WebMethod;
 import javax.jws.WebService;
 import java.security.SecureRandom;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @WebService(serviceName = "PizzaShopWebService")
 public class PizzaShopService {
 
 	private int waitingTime = 30;
+	private final Logger log = Logger.getAnonymousLogger();
 
 	@WebMethod(operationName = "sendOrder")
 	public String sendOrder(String order) {
 		//Generates an ID for the order and attaches it to the received order
-		String generatedId = generateOrderId(order);
+		String generatedId = generateOrderId();
 
 		//Adds the order to the list of pending orders
 		storeOrder(order, generatedId);
-		System.out.println("Android processing ended ->" + new Date() + "\n");
+
+		log.log(Level.INFO, "Android processing ended --> {0}\n", new Date());
+
 		return waitingTime + "_" + generatedId;
 	}
 
@@ -32,7 +38,7 @@ public class PizzaShopService {
 	public List<String> getNewOrders(int waitingTime) {
 		this.waitingTime = waitingTime;
 		Session session;
-		List<Order> ordersRetrieved = null;
+		List<Order> ordersRetrieved;
 		try {
 			session = HibernateSingleton.getSession();
 			Query<Order> query = session.createQuery("from Order where orderStatus = :status",
@@ -49,7 +55,7 @@ public class PizzaShopService {
 			transaction.commit();
 		} catch (HibernateException e) {
 			e.printStackTrace();
-			return null;
+			return Collections.emptyList();
 		}
 
 		return ParserXML.convertOrderListToStringList(ordersRetrieved, ParserXML.WEBSERVICE);
@@ -75,10 +81,9 @@ public class PizzaShopService {
 	@WebMethod(operationName = "finalizeOrder")
 	public void finalizeOrder(String orderId) {
 		Session session;
-		Transaction transaction = null;
+		session = HibernateSingleton.getSession();
+		Transaction transaction = session.beginTransaction();
 		try {
-			session = HibernateSingleton.getSession();
-			transaction = session.beginTransaction();
 			Order order = session.get(Order.class, orderId);
 			order.setOrderStatus(Order.STATUS_FINISHED);
 			session.update(order);
@@ -91,7 +96,7 @@ public class PizzaShopService {
 	}
 
 
-	private String generateOrderId(String orderXml) {
+	private String generateOrderId() {
 		StringBuilder id = new StringBuilder();
 		try {
 			Session session = HibernateSingleton.getSession();
@@ -112,13 +117,14 @@ public class PizzaShopService {
 		Transaction transaction = null;
 		try {
 			Order order = ParserXML.parseXmlToOrder(orderString, ParserXML.WEBSERVICE);
-			order.setOrderId(orderId);
-			order.setOrderStatus(Order.STATUS_RECEIVED_BY_SERVER);
-			session = HibernateSingleton.getSession();
-			transaction = session.beginTransaction();
-			session.save(order);
-			transaction.commit();
-
+			if (order != null) {
+				order.setOrderId(orderId);
+				order.setOrderStatus(Order.STATUS_RECEIVED_BY_SERVER);
+				session = HibernateSingleton.getSession();
+				transaction = session.beginTransaction();
+				session.save(order);
+				transaction.commit();
+			}
 		} catch (Exception e) {
 			assert transaction != null;
 			transaction.rollback();
@@ -132,7 +138,6 @@ public class PizzaShopService {
 		try {
 			session = HibernateSingleton.getSession();
 			Order order = session.get(Order.class, orderId);
-			System.out.println(order.toString());
 
 			return ParserXML.parseOrderToXml(order, ParserXML.WEBSERVICE);
 		} catch (HibernateException e) {
