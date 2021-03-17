@@ -8,6 +8,13 @@ import org.hibernate.query.Query;
 
 import javax.jws.WebMethod;
 import javax.jws.WebService;
+import javax.xml.XMLConstants;
+import javax.xml.transform.Source;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
+import java.io.StringReader;
 import java.security.SecureRandom;
 import java.util.Collections;
 import java.util.Date;
@@ -23,15 +30,20 @@ public class PizzaShopService {
 
 	@WebMethod(operationName = "sendOrder")
 	public String sendOrder(String order) {
-		//Generates an ID for the order and attaches it to the received order
-		String generatedId = generateOrderId();
+		if (validateXML(order)) {
+			//Generates an ID for the order and attaches it to the received order
+			String generatedId = generateOrderId();
 
-		//Adds the order to the list of pending orders
-		storeOrder(order, generatedId);
+			//Adds the order to the list of pending orders
+			storeOrder(order, generatedId);
 
-		log.log(Level.INFO, "Android processing ended --> {0}\n", new Date());
+			log.log(Level.INFO, "Android processing ended --> {0}\n", new Date());
 
-		return waitingTime + "_" + generatedId;
+			return waitingTime + "_" + generatedId;
+		} else {
+			return null;
+		}
+
 	}
 
 	@WebMethod(operationName = "getOrders")
@@ -95,6 +107,24 @@ public class PizzaShopService {
 		}
 	}
 
+	private boolean validateXML(String xml) {
+		Source schemaFile = new StreamSource(getClass().getClassLoader().
+				getResourceAsStream("com/macisdev/pizzashopwebservice/resources/schema.xsd"));
+
+		Source xmlFile = new StreamSource(new StringReader(xml));
+		SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+
+		try {
+			Schema schema = schemaFactory.newSchema(schemaFile);
+			Validator validator = schema.newValidator();
+			validator.validate(xmlFile);
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+
+	}
 
 	private String generateOrderId() {
 		StringBuilder id = new StringBuilder();
