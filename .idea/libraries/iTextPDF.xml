@@ -1,0 +1,14 @@
+<component name="libraryTable">
+  <library name="iTextPDF">
+    <CLASSES>
+      <root url="file://E:/Descargas/iTextPDF" />
+      <root url="jar://E:/Descargas/slf4j-log4j12-2.0.0-alpha1.jar!/" />
+      <root url="jar://E:/Descargas/slf4j-api-1.7.30.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="https://api.itextpdf.com/iText7/java/7.1.14/" />
+    </JAVADOC>
+    <SOURCES />
+    <jarDirectory url="file://E:/Descargas/iTextPDF" recursive="false" />
+  </library>
+</component>

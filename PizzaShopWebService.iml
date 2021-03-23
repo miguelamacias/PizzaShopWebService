@@ -37,5 +37,6 @@
     <orderEntry type="library" exported="" name="Hibernate 5.4.11-5.4.11" level="project" />
     <orderEntry type="library" exported="" name="mariadb-java-client-2.6.2" level="project" />
     <orderEntry type="library" exported="" name="ordersLibrary" level="project" />
+    <orderEntry type="library" name="iTextPDF" level="project" />
   </component>
 </module>
